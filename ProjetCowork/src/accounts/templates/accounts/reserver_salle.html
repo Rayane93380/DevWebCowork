@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réserver une Salle</title>
+    <link rel="stylesheet" href="{% static 'css/reserversalle.css' %}">
+</head>
+<body>
+
+    <h1>Réserver une Salle</h1>
+
+    <form action="#" method="post">
+        {% csrf_token %}
+
+        <label for="nom">Nom :</label>
+        <input type="text" id="nom" name="nom" required>
+
+        <label for="prenom">Prénom :</label>
+        <input type="text" id="prenom" name="prenom" required>
+
+        <label for="numero_salle">Numéro de Salle :</label>
+        <select id="numero_salle" name="numero_salle" required>
+            <option value="101">101</option>
+            <option value="102">102</option>
+            <option value="103">103</option>
+            <option value="104">104</option>
+        </select>
+
+        <label for="date">Date de réservation :</label>
+        <input type="date" id="date" name="date" required>
+
+        <label for="heure_debut">Heure de début :</label>
+        <input type="time" id="heure_debut" name="heure_debut" required>
+
+        <label for="heure_fin">Heure de fin :</label>
+        <input type="time" id="heure_fin" name="heure_fin" required>
+
+        <button type="submit">Réserver</button>
+    </form>
+
+    <div class="button-container">
+        <button onclick="window.location.href='{% url 'liste_salles2' %}'">Retour à la liste des salles</button>
+    </div>
+
+</body>
+</html>
+

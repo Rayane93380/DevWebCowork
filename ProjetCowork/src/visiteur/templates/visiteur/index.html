@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple visiteur</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="dashboard">
+        <div class="widget">
+            🌡️ <br>
+            <strong>Température des salles</strong>
+            <br>
+            <button onclick="window.location.href='{% url 'temperature_salles' %}'">Voir détails</button>
+        </div>
+        <div class="widget">
+            🏢 <br>
+            <strong>Liste des salles</strong>
+            <br>
+            <button onclick="window.location.href='{% url 'liste_salles' %}'">Voir détails</button>
+        </div>
+        <div class="widget">
+            🗑️ <br>
+            <strong>Consulter les poubelles vides</strong>
+            <br>
+            <button onclick="window.location.href='{% url 'poubelles_vides' %}'">Voir détails</button>
+        </div>
+        <div class="widget">
+            💻 <br>
+            <strong>Consulter les ordinateurs disponibles</strong>
+            <br>
+            <button onclick="window.location.href='{% url 'ordinateurs_disponibles' %}'">Voir détails</button>
+        </div>
+    </div>
+</body>
+</html>
