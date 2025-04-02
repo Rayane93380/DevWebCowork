@@ -12,6 +12,12 @@ def signup(request):
         username = request.POST.get("username")
         password = request.POST.get("password")
         email = request.POST.get("email")
+        nom = request.POST.get("nom")
+        prenom = request.POST.get("prenom")
+        age = request.POST.get("age")
+        date_naissance = request.POST.get("date_naissance")
+        genre = request.POST.get("genre")
+
         if User.objects.filter(username=username).exists():
             messages.error(request, "Ce nom d'utilisateur est déjà pris. Veuillez en choisir un autre.")
             return render(request, "accounts/signup.html")
@@ -22,7 +28,13 @@ def signup(request):
             return render(request, "accounts/signup.html")
         user = User.objects.create_user(username=username,
                                  password=password,
-                                 email=email)
+                                 email=email,
+                                 nom=nom,
+                                 prenom=prenom,
+                                 age=int(age) if age else None,  # Convertir en entier si non vide
+                                 date_de_naissance=date_naissance if date_naissance else None,
+                                 genre=genre
+                                 )
         login(request, user)
         return redirect("visiteur_index2")
     return render(request, "accounts/signup.html")

@@ -33,6 +33,35 @@
       <label for="mail">Adresse e-mail :</label>
       <input id="mail" type="email" name="email" required>
     </p>
+    <p>
+      <label for="nom">Nom :</label>
+      <input id="nom" type="text" name="nom" required>
+    </p>
+
+    <p>
+      <label for="prenom">Prénom :</label>
+      <input id="prenom" type="text" name="prenom" required>
+    </p>
+
+    <p>
+      <label for="age">Âge :</label>
+      <input id="age" type="number" name="age" min="0" required>
+    </p>
+
+    <p>
+      <label for="date_naissance">Date de naissance :</label>
+      <input id="date_naissance" type="date" name="date_naissance" required>
+    </p>
+
+    <p>
+      <label for="genre">Genre :</label>
+      <select id="genre" name="genre" required>
+        <option value="">Sélectionner...</option>
+        <option value="Homme">Homme</option>
+        <option value="Femme">Femme</option>
+        <option value="Autre">Autre</option>
+      </select>
+    </p>
 
     <button type="submit">S'inscrire</button>
   </form>
