@@ -1,0 +1,45 @@
+html, body {
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background-image: url("CoWork.jpg");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.dashboard {
+    background-color: rgba(0, 0, 0, .35);
+    padding: 20px;
+    border-radius: 10px;
+    color: white;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.widget {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 20px;
+    border-radius: 10px;
+    font-size: 1.2rem;
+}
+
+.widget button {
+    margin-top: 10px;
+    padding: 5px 10px;
+    background: #808080;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.widget button:hover {
+    background: #606060;
+}

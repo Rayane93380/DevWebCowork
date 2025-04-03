@@ -1,0 +1,88 @@
+/* Styles généraux */
+body {
+    font-family: Arial, sans-serif;
+    background: url("page.jpg") no-repeat center center fixed; /* Fond en image */
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+/* Conteneur du profil */
+.profile-container {
+    background: rgba(255, 255, 255, 0.9); /* Fond semi-transparent */
+    padding: 15px; /* Réduction du padding */
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    width: 360px; /* Réduction de la largeur */
+    text-align: center;
+}
+
+/* Titres */
+h2 {
+    margin-bottom: 10px; /* Réduction de l'espace */
+    font-size: 18px; /* Légère réduction de la taille */
+    color: #333;
+}
+
+/* Champs de formulaire */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+fieldset {
+    border: none;
+    margin-bottom: 10px; /* Réduction de l'espacement */
+    padding: 5px; /* Réduction du padding */
+    background: #f8f8f8;
+    border-radius: 5px;
+}
+
+/* Légende des fieldsets */
+legend {
+    font-weight: bold;
+    color: #007bff;
+    font-size: 14px; /* Réduction de la taille */
+}
+
+/* Labels et inputs */
+label {
+    display: block;
+    margin-top: 5px; /* Réduction de l'espace */
+    font-weight: bold;
+    text-align: left;
+    font-size: 13px; /* Réduction de la taille */
+}
+
+input, select {
+    width: 100%;
+    padding: 6px; /* Réduction du padding */
+    margin-top: 3px; /* Réduction de l'espace entre label et input */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 13px; /* Réduction de la taille */
+}
+
+/* Photo de profil */
+.profile-photo {
+    width: 80px; /* Réduction de la taille */
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-top: 8px; /* Réduction de l'espace */
+    border: 2px solid #007bff;
+}
+
+/* Bouton d'enregistrement */
+button {
+    background-color: #007bff;
+    color: white;
+    padding: 8px; /* Réduction du padding */
+    margin-top: 10px; /* Réduction de l'espace */
+    border: none;
+    border-radius: 5px;
+    font-size:
+

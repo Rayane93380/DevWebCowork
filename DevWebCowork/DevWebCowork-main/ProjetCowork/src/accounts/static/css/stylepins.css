@@ -1,0 +1,38 @@
+/* Styles généraux */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    background-image: url("page.jpg"); /* Remplacez par votre image */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Conteneur principal */
+.container {
+    background: rgba(255, 255, 255, 0.9); /* Fond blanc légèrement transparent */
+    padding: 20px; /* Réduction de la marge interne */
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    width: 320px; /* Légère réduction de la largeur */
+    text-align: center;
+}
+
+/* Titre */
+h2 {
+    margin-bottom: 15px; /* Réduction de l'espace sous le titre */
+    font-size: 20px; /* Réduction de la taille */
+    color: #333;
+}
+
+/* Champs de saisie */
+input {
+    width: 92%;
+    padding: 8px; /* Réduction du padding*
