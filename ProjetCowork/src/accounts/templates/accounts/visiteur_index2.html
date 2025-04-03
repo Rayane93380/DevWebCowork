@@ -11,6 +11,7 @@
         {% if user.is_authenticated %}
             <span class="username">{{ user.username }}</span>
             <a href="{% url 'logout' %}" class="logout-btn">Déconnexion</a>
+            <a href="{% url 'modifier_profil' %}" class="edit-profile-btn">Modifier Profil</a>
         {% endif %}
     </div>
     <div class="dashboard">

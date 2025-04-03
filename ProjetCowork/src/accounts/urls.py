@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import signup, login_user, logout_user, visiteur_index2, temperature_salles2, liste_salles2, poubelles_vides2, ordi_dispo2, reserver_salle, reserver_PC, modifier_temp
+from .views import modifier_profil, signup, login_user, logout_user, visiteur_index2, temperature_salles2, liste_salles2, poubelles_vides2, ordi_dispo2, reserver_salle, reserver_PC, modifier_temp
 
 
 urlpatterns = [
@@ -14,4 +14,5 @@ urlpatterns = [
     path('reserver_salle/', reserver_salle, name='reserver_salle'),
     path('reserver_PC/', reserver_PC, name='reserver_PC'),
     path('temperature_salles2/modifier_temp/', modifier_temp, name='modifier_temp'),
+    path('modifier-profil/', modifier_profil, name='modifier_profil'),
 ]

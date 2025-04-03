@@ -1,10 +1,69 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import get_user_model, login, authenticate, logout
 from django.contrib import messages
+from datetime import datetime
 User = get_user_model()
+from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth import update_session_auth_hash
+from datetime import datetime, date
+
 
 NIVEAU_MINIMUM_RESERVATION = 2
 NIVEAU_MINIMUM_TEMPERATURE = 3
+
+def calculer_age(date_naissance):
+    today = date.today()
+    return today.year - date_naissance.year - ((today.month, today.day) < (date_naissance.month, date_naissance.day))
+
+
+def modifier_profil(request):
+    # Récupérer l'utilisateur connecté
+    user = request.user
+
+    if request.method == 'POST':
+        # Récupérer les données du formulaire
+        user.nom = request.POST.get('nom')
+        user.prenom = request.POST.get('prenom')
+        user.age = request.POST.get('age')
+        user.genre = request.POST.get('genre')
+
+        # Récupérer le mot de passe actuel et le nouveau mot de passe
+        current_password = request.POST.get('current_password')
+        new_password = request.POST.get('password')
+
+        # Validation et mise à jour du mot de passe
+        if current_password and new_password:
+            if check_password(current_password, user.password):  # Vérifier le mot de passe actuel
+                user.password = make_password(new_password)  # Hacher le nouveau mot de passe
+                update_session_auth_hash(request, user)  # Pour garder l'utilisateur connecté après changement
+                messages.success(request, "Votre mot de passe a été mis à jour.")
+            else:
+                messages.error(request, "Le mot de passe actuel est incorrect.")
+                return redirect('modifier_profil')
+
+        # Conversion de la date de naissance au format correct
+        date_naissance_str = request.POST.get('date_naissance')
+        if date_naissance_str:
+            try:
+                user.date_de_naissance = datetime.strptime(date_naissance_str, '%Y-%m-%d').date()
+            except ValueError:
+                messages.error(request, "La date de naissance n'est pas valide. Veuillez réessayer.")
+                return redirect('modifier_profil')
+
+        # Gérer la photo de profil si elle est envoyée
+        if 'photo_profil' in request.FILES:
+            user.photo_profil = request.FILES['photo_profil']
+
+        # Sauvegarder les modifications dans la base de données
+        user.save()
+
+        # Message de succès
+        messages.success(request, "Votre profil a été modifié avec succès.")
+        return redirect('modifier_profil')  # Rediriger vers la page de modification après sauvegarde
+
+    # Si la requête est GET, pré-remplir les champs avec les informations actuelles
+    return render(request, 'accounts/modifier_profil.html', {'user': user})
 
 def signup(request):
     if request.method == "POST":
@@ -14,9 +73,20 @@ def signup(request):
         email = request.POST.get("email")
         nom = request.POST.get("nom")
         prenom = request.POST.get("prenom")
-        age = request.POST.get("age")
-        date_naissance = request.POST.get("date_naissance")
+        date_naissance_str = request.POST.get("date_naissance")
         genre = request.POST.get("genre")
+
+        try:
+            date_naissance = datetime.strptime(date_naissance_str, "%Y-%m-%d").date()
+            age = calculer_age(date_naissance)
+        except ValueError:
+            messages.error(request, "Veuillez entrer une date de naissance valide.")
+            return render(request, "accounts/signup.html")
+
+            # Vérifier si l'âge est entre 18 et 25 ans
+        if age < 18 or age > 25:
+            messages.error(request, "L'inscription est réservée aux personnes entre 18 et 25 ans.")
+            return render(request, "accounts/signup.html")
 
         if User.objects.filter(username=username).exists():
             messages.error(request, "Ce nom d'utilisateur est déjà pris. Veuillez en choisir un autre.")

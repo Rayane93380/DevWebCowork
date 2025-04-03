@@ -44,6 +44,7 @@ html, body {
     background: #606060;
 }
 
+/* Barre utilisateur */
 .user-info {
     position: absolute;
     top: 10px;
@@ -61,7 +62,8 @@ html, body {
     font-size: 16px;
 }
 
-.logout-btn {
+/* Style pour Déconnexion et Modifier Profil */
+.logout-btn, .edit-profile-btn {
     background: #555; /* Gris foncé */
     color: white;
     padding: 5px 10px;
@@ -71,6 +73,6 @@ html, body {
     transition: background 0.3s ease;
 }
 
-.logout-btn:hover {
+.logout-btn:hover, .edit-profile-btn:hover {
     background: #333; /* Assombrir au survol */
 }

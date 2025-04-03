@@ -1,3 +1,4 @@
+/* Styles généraux */
 body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f4;
@@ -14,77 +15,26 @@ body {
     align-items: center;
 }
 
-/* Conteneur principal pour le formulaire */
+/* Conteneur principal */
 .container {
     background: rgba(255, 255, 255, 0.9); /* Fond blanc légèrement transparent */
-    padding: 30px;
+    padding: 20px; /* Réduction de la marge interne */
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    width: 350px;
+    width: 320px; /* Légère réduction de la largeur */
     text-align: center;
 }
 
 /* Titre */
 h2 {
-    margin-bottom: 20px;
-    font-size: 24px;
+    margin-bottom: 15px; /* Réduction de l'espace sous le titre */
+    font-size: 20px; /* Réduction de la taille */
     color: #333;
 }
 
 /* Champs de saisie */
 input {
-    width: 90%;
-    padding: 12px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    font-size: 16px;
-}
-
-/* Bouton "M'inscrire" */
-button {
-    padding: 12px 40px; /* Augmenter le padding pour agrandir le bouton */
-    background: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 18px;
-    transition: background 0.3s ease;
-    width: auto; /* Retirer width: 100% et laisser le bouton s'ajuster selon son contenu */
-    display: block; /* Faire en sorte que le bouton soit un élément de bloc pour pouvoir le centrer */
-    margin: 0 auto; /* Cela centre le bouton horizontalement */
-}
-
-/* Effet au survol du bouton */
-button:hover {
-    background: #388E3C;
-}
-
-/* Messages d'erreur et de succès */
-#message, #error-message {
-    font-size: 14px;
-    margin-top: 10px;
-}
-
-/* Bouton "Retour à l'accueil" */
-.back-btn {
-    position: absolute;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #4CAF50;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 8px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-}
-
-.back-btn:hover {
-    background: #388E3C;
-}
+    width: 92%;
+    padding: 8px; /* Réduction du padding*
 
 
