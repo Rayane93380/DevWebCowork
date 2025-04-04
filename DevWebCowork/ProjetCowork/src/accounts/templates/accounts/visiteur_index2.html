@@ -1,0 +1,44 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple visiteur</title>
+    <link rel="stylesheet" href="{% static 'css/style2.css' %}">
+</head>
+<body>
+    <div class="user-info">
+        {% if user.is_authenticated %}
+            <span class="username">{{ user.username }}</span>
+            <a href="{% url 'logout' %}" class="logout-btn">Déconnexion</a>
+            <a href="{% url 'modifier_profil' %}" class="edit-profile-btn">Modifier Profil</a>
+        {% endif %}
+    </div>
+    <div class="dashboard">
+        <div class="widget">
+            🌡️ <br>
+            <strong>Température des salles</strong>
+            <br>
+            <button onclick="window.location.href='{% url 'temperature_salles2' %}'">Voir détails</button>
+        </div>
+        <div class="widget">
+            🏢 <br>
+            <strong>Liste des salles</strong>
+            <br>
+            <button onclick="window.location.href='{% url 'liste_salles2' %}'">Voir détails</button>
+        </div>
+        <div class="widget">
+            🗑️ <br>
+            <strong>Consulter les poubelles vides</strong>
+            <br>
+            <button onclick="window.location.href='{% url 'poubelles_vides2' %}'">Voir détails</button>
+        </div>
+        <div class="widget">
+            💻 <br>
+            <strong>Consulter les ordinateurs disponibles</strong>
+            <br>
+            <button onclick="window.location.href='{% url 'ordi_dispo2' %}'">Voir détails</button>
+        </div>
+    </div>
+</body>
+</html>

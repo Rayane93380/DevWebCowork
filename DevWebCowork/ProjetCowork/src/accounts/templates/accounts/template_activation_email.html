@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Activation de votre compte</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 40px;">
+
+    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+        <h2 style="color: #2c3e50;">Bonjour {{ user.username }} 👋</h2>
+
+        <p>Merci pour votre inscription à <strong>CoWork</strong> !</p>
+
+        <p>Pour activer votre compte et commencer à utiliser nos services, veuillez cliquer sur le bouton ci-dessous :</p>
+
+        <p style="text-align: center;">
+            <a href="{{ protocol }}://{{ domain }}{% url 'activate' uidb64=uid token=token %}"
+               style="display: inline-block; padding: 12px 24px; background-color: #27ae60; color: #fff; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                ✅ Activer mon compte
+            </a>
+        </p>
+
+        <p>Si le bouton ne fonctionne pas, vous pouvez copier-coller ce lien dans votre navigateur :</p>
+        <p style="background-color: #f0f0f0; padding: 10px; border-radius: 5px; word-break: break-all;">
+            {{ protocol }}://{{ domain }}{% url 'activate' uidb64=uid token=token %}
+        </p>
+
+        <p style="color: #7f8c8d; font-size: 14px;">Si vous n’avez pas demandé ce compte, vous pouvez ignorer cet e-mail.</p>
+
+        <hr style="margin-top: 30px;">
+        <p style="text-align: center; color: #95a5a6; font-size: 12px;">
+            &copy; 2025 CoWork — Tous droits réservés.
+        </p>
+    </div>
+
+</body>
+</html>
+
