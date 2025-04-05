@@ -1,14 +1,22 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import get_user_model, login, authenticate, logout
-from django.contrib import messages
-from datetime import datetime
-User = get_user_model()
-from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth import update_session_auth_hash
 from datetime import datetime, date
+from django.contrib import messages
+from .models import Imprimante, Ordinateur, CapteurPresence, Thermostat, Poubelle, Reservation
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+from django.utils.http import urlsafe_base64_encode,  urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.sites.shortcuts import get_current_site
+from .tokens import account_activation_token
+from django.conf import settings
+from email.utils import formataddr
+from django.contrib.auth.decorators import login_required
 
 
+User = get_user_model()
 NIVEAU_MINIMUM_RESERVATION = 2
 NIVEAU_MINIMUM_TEMPERATURE = 3
 
@@ -65,6 +73,31 @@ def modifier_profil(request):
     # Si la requête est GET, pré-remplir les champs avec les informations actuelles
     return render(request, 'accounts/modifier_profil.html', {'user': user})
 
+def activateEmail(request, user, to_email):
+    mail_subject = "Activez votre compte"
+    message = render_to_string("accounts/template_activation_email.html", {
+        'user': user,
+        'domain': get_current_site(request).domain,
+        'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+        'token': account_activation_token.make_token(user),
+        'protocol': 'https' if request.is_secure() else 'http',
+    })
+    email = EmailMessage(
+        subject=mail_subject,
+        body=message,
+        from_email=formataddr(("Votre espace CoWorking", settings.EMAIL_HOST_USER)),
+        to=[to_email]
+    )
+    email.content_subtype = "html"
+    email.send()
+
+    messages.success(
+        request,
+        f"Merci <b>{user.username}</b> pour votre inscription ! Un e-mail de confirmation a été envoyé à "
+        f"<b>{to_email}</b>. Veuillez vérifier votre boîte de réception (ainsi que vos spams) pour activer votre compte."
+    )
+
+
 def signup(request):
     if request.method == "POST":
         # Traiter le formulaire
@@ -105,9 +138,35 @@ def signup(request):
                                  date_de_naissance=date_naissance if date_naissance else None,
                                  genre=genre
                                  )
-        login(request, user)
-        return redirect("visiteur_index2")
+        user.is_active = False  # Ne pas activer le compte tout de suite
+        user.save()
+
+        # Envoi du mail de confirmation
+        activateEmail(request, user, email)
+
+        return redirect("email_verification_sent")
+
     return render(request, "accounts/signup.html")
+
+def email_verification_sent(request):
+    return render(request, "accounts/email_verification_sent.html")
+
+def activate(request, uidb64, token):
+    User = get_user_model()
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and account_activation_token.check_token(user, token):
+        user.is_active = True
+        user.save()
+        messages.success(request, "Votre compte a été activé avec succès ! Vous pouvez maintenant vous connecter.")
+        return redirect('login')  # Redirige vers ta page de connexion
+    else:
+        messages.error(request, "Le lien d'activation est invalide ou expiré.")
+        return redirect('signup')  # Ou autre page de ton choix
 
 def login_user(request):
     if request.method == "POST":
@@ -118,10 +177,8 @@ def login_user(request):
         user = authenticate(username=username, password=password)
         if user:
             login(request, user)
-            # 🔥 Ajoute +1 aux points de l'utilisateur
             user.points += 1
 
-            # 🔥 Vérifie si le niveau doit être mis à jour
             for level, threshold in LEVEL_THRESHOLDS.items():
                 if user.points >= threshold:
                     user.niveau = level
@@ -133,7 +190,6 @@ def login_user(request):
 
 # Create your views here.
 from django.http import HttpResponse
-from django.shortcuts import render
 
 # Create your views here.
 
@@ -155,9 +211,8 @@ def ordi_dispo2(request):
 def reserver_salle(request):
     return render(request, "accounts/reserver_salle.html")
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+
+
 
 
 @login_required
@@ -189,8 +244,99 @@ def logout_user(request):
 
 
 LEVEL_THRESHOLDS = {
-    1: 0,  # Niveau 1 -> 100 points
-    2: 5,  # Niveau 2 -> 200 points
-    3: 10,  # Niveau 3 -> 500 points
-    4: 15, # Niveau 4 -> 1000 points
+    1: 0,
+    2: 5,
+    3: 10,
+    4: 15,
 }
+
+@login_required
+def afficher_objets(request, objet_type):
+    """
+    Affiche les objets connectés d'un type spécifique (imprimante, ordinateur, thermostat, etc.)
+    """
+    if objet_type == 'capteurpresence':
+        objets = CapteurPresence.objects.all()
+    elif objet_type == 'thermostat':
+        objets = Thermostat.objects.all()
+    elif objet_type == 'poubelle':
+        objets = Poubelle.objects.all()
+    elif objet_type == 'imprimante':
+        objets = Imprimante.objects.all()
+    elif objet_type == 'ordinateur':
+        objets = Ordinateur.objects.all()
+    else:
+        return redirect('dashbord')  # Redirection si le type d'objet n'est pas valide
+
+    context = {
+        'objets': objets,
+        'objet_type': objet_type,
+    }
+    return render(request, 'accounts/afficher_objets.html', context)
+
+
+
+@login_required
+def reserver_objet(request, objet_type, objet_id):
+    """
+    Gérer la réservation d'un objet (imprimante ou ordinateur)
+    """
+    if objet_type == 'imprimante':
+        objet = Imprimante.objects.get(id=objet_id)
+    elif objet_type == 'ordinateur':
+        objet = Ordinateur.objects.get(id=objet_id)
+    else:
+        return redirect('afficher_objets')
+
+    # Vérification si l'objet est réservable
+    if not objet.reservable or objet.maintenance_due:
+        return render(request, 'error.html', {'message': 'Cet objet n\'est pas disponible pour réservation.'})
+
+    # Créer une nouvelle réservation
+    reservation = Reservation.objects.create(user=request.user, objet_type=objet_type, objet_id=objet.id)
+
+    # Incrémenter le compteur de réservations
+    objet.reservation_count += 1
+    if objet.reservation_count >= 4:
+        # Si l'objet atteint 4 réservations, mettre à jour le champ maintenance_due
+        objet.maintenance_due = True
+        objet.reservable = False  # Marquer l'objet comme non réservable
+    objet.save()
+
+    return redirect('afficher_objets')
+
+
+@login_required
+def annuler_reservation(request, reservation_id):
+    """
+    Annuler une réservation existante
+    """
+    reservation = Reservation.objects.get(id=reservation_id)
+
+    if reservation.user != request.user:
+        return redirect(
+            'afficher_objets')  # Si l'utilisateur essaie de modifier une réservation qui n'est pas la sienne
+
+    # Supprimer la réservation
+    reservation.delete()
+
+    # Récupérer l'objet réservé
+    if reservation.objet_type == 'imprimante':
+        objet = Imprimante.objects.get(id=reservation.objet_id)
+    elif reservation.objet_type == 'ordinateur':
+        objet = Ordinateur.objects.get(id=reservation.objet_id)
+
+    # Décrémenter le compteur de réservations
+    objet.reservation_count -= 1
+    if objet.reservation_count < 4:
+        # Si le nombre de réservations est inférieur à 4, remettre l'objet en état réservable
+        objet.maintenance_due = False
+        objet.reservable = True
+    objet.save()
+
+    return redirect('afficher_objets')
+
+
+def dashboard(request):
+    # Récupérer les objets connectés
+    return render(request, 'accounts/dashboard.html')

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+</html><!-- templates/dashboard.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Tableau de bord</title>
+</head>
+<body>
+    <h1>Bienvenue sur votre tableau de bord</h1>
+    <div class="dashboard-container">
+        <!-- Section des objets connectés -->
+        <section>
+            <h2>Capteurs de présence</h2>
+            <button onclick="window.location.href='{% url 'afficher_objets' 'capteurpresence' %}'">Voir les capteurs</button>
+        </section>
+        <section>
+            <h2>Thermostats</h2>
+            <button onclick="window.location.href='{% url 'afficher_objets' 'thermostat' %}'">Voir les thermostats</button>
+        </section>
+        <section>
+            <h2>Poubelles intelligentes</h2>
+            <button onclick="window.location.href='{% url 'afficher_objets' 'poubelle' %}'">Voir les poubelles</button>
+        </section>
+        <section>
+            <h2>Imprimantes</h2>
+            <button onclick="window.location.href='{% url 'afficher_objets' 'imprimante' %}'">Voir les imprimantes</button>
+        </section>
+        <section>
+            <h2>Ordinateurs</h2>
+            <button onclick="window.location.href='{% url 'afficher_objets' 'ordinateur' %}'">Voir les ordinateurs</button>
+        </section>
+    </div>
+</body>
+</html>
