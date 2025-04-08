@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Profil de {{ utilisateur.username }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .profil-card {
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            margin-top: 20px;
+            display: inline-block;
+            padding: 8px 12px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+
+        .back-btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Profil de {{ utilisateur.username }}</h1>
+
+    <div class="profil-card">
+        <p><strong>Nom d'utilisateur :</strong> {{ utilisateur.username }}</p>
+        <p><strong>Email :</strong> {{ utilisateur.email }}</p>
+        <p><strong>Niveau :</strong> {{ utilisateur.niveau }}</p>
+
+        {% if request.user.is_superuser or request.user == utilisateur %}
+            <div class="section-title">Informations privées :</div>
+            <p><strong>Date d'inscription :</strong> {{ utilisateur.date_joined }}</p>
+            <p><strong>Dernière connexion :</strong> {{ utilisateur.last_login }}</p>
+            <p><strong>Staff :</strong> {{ utilisateur.is_staff }}</p>
+            <p><strong>Superutilisateur :</strong> {{ utilisateur.is_superuser }}</p>
+        {% endif %}
+    </div>
+
+    <a href="{% url 'visiteur_index2' %}" class="back-btn">⬅ Retour à l'accueil</a>
+
+</body>
+</html>
