@@ -1,10 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import get_user_model, login, authenticate, logout
 from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth import update_session_auth_hash
 from datetime import datetime, date
 from django.contrib import messages
-from .models import Imprimante, Ordinateur, CapteurPresence, Thermostat, Poubelle, Reservation
+from .models import Imprimante, Ordinateur, CapteurPresence, Thermostat, Poubelle, Salle, ReservationSalle, ReservationOrdinateur, Signalement
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode,  urlsafe_base64_decode
@@ -14,7 +14,9 @@ from .tokens import account_activation_token
 from django.conf import settings
 from email.utils import formataddr
 from django.contrib.auth.decorators import login_required
-
+from django.db.models import Q
+from datetime import timedelta
+from django.utils import timezone
 
 User = get_user_model()
 NIVEAU_MINIMUM_RESERVATION = 2
@@ -26,21 +28,28 @@ def calculer_age(date_naissance):
 
 
 def modifier_profil(request):
-    # Récupérer l'utilisateur connecté
     user = request.user
 
     if request.method == 'POST':
         # Récupérer les données du formulaire
+        username = request.POST.get('username')  # Récupérer le nouveau nom d'utilisateur
+        if username != user.username:  # Vérifier si le nom d'utilisateur a changé
+            if User.objects.filter(username=username).exists():  # Vérifier si le nom d'utilisateur existe déjà
+                messages.error(request, "Ce nom d'utilisateur est déjà pris.")
+                return redirect('modifier_profil')
+
+            user.username = username  # Mettre à jour le nom d'utilisateur
+
+        # Récupérer et mettre à jour d'autres informations
         user.nom = request.POST.get('nom')
         user.prenom = request.POST.get('prenom')
         user.age = request.POST.get('age')
         user.genre = request.POST.get('genre')
 
-        # Récupérer le mot de passe actuel et le nouveau mot de passe
+        # Gérer la mise à jour du mot de passe
         current_password = request.POST.get('current_password')
         new_password = request.POST.get('password')
 
-        # Validation et mise à jour du mot de passe
         if current_password and new_password:
             if check_password(current_password, user.password):  # Vérifier le mot de passe actuel
                 user.password = make_password(new_password)  # Hacher le nouveau mot de passe
@@ -50,16 +59,16 @@ def modifier_profil(request):
                 messages.error(request, "Le mot de passe actuel est incorrect.")
                 return redirect('modifier_profil')
 
-        # Conversion de la date de naissance au format correct
+        # Mettre à jour la date de naissance
         date_naissance_str = request.POST.get('date_naissance')
         if date_naissance_str:
             try:
                 user.date_de_naissance = datetime.strptime(date_naissance_str, '%Y-%m-%d').date()
             except ValueError:
-                messages.error(request, "La date de naissance n'est pas valide. Veuillez réessayer.")
+                messages.error(request, "La date de naissance n'est pas valide.")
                 return redirect('modifier_profil')
 
-        # Gérer la photo de profil si elle est envoyée
+        # Gérer la photo de profil si envoyé
         if 'photo_profil' in request.FILES:
             user.photo_profil = request.FILES['photo_profil']
 
@@ -70,7 +79,7 @@ def modifier_profil(request):
         messages.success(request, "Votre profil a été modifié avec succès.")
         return redirect('modifier_profil')  # Rediriger vers la page de modification après sauvegarde
 
-    # Si la requête est GET, pré-remplir les champs avec les informations actuelles
+    # Pré-remplir le formulaire pour la méthode GET
     return render(request, 'accounts/modifier_profil.html', {'user': user})
 
 def activateEmail(request, user, to_email):
@@ -183,7 +192,7 @@ def login_user(request):
                 if user.points >= threshold:
                     user.niveau = level
 
-            if user.niveau == 4 and not user.is_superuser:
+            if user.niveau == 4:
                 user.is_staff = True
                 user.is_superuser = True
                 user.save()
@@ -202,24 +211,6 @@ from django.http import HttpResponse
 def visiteur_index2(request):
     return render(request, "accounts/visiteur_index2.html")
 
-def temperature_salles2(request):
-    return render(request, "accounts/temperature_salles2.html")
-
-def liste_salles2(request):
-    return render(request, "accounts/liste_salles2.html")
-
-def poubelles_vides2(request):
-    return render(request, "accounts/poubelles_vides2.html")
-
-def ordi_dispo2(request):
-    return render(request, "accounts/ordi_dispo2.html")
-
-def reserver_salle(request):
-    return render(request, "accounts/reserver_salle.html")
-
-
-
-
 
 @login_required
 def reserver_PC(request):
@@ -233,20 +224,55 @@ def reserver_PC(request):
 
     return render(request, "accounts/reserver_PC.html") # Redirection après réservation
 
-@login_required()
-def modifier_temp(request):
-    user = request.user
+@login_required
+def modifier_temp(request, thermostat_id):
+    thermostat = get_object_or_404(Thermostat, id=thermostat_id)
+    if request.method == 'POST':
+        nouvelle_temperature = request.POST.get('temperature')
 
-    if user.niveau < NIVEAU_MINIMUM_TEMPERATURE:
-        messages.error(request, "Vous n'avez pas le niveau requis pour modifier la température")
-        return render(request, "accounts/temperature_salles2.html")
+        if nouvelle_temperature:
+            try:
+                nouvelle_temperature = float(nouvelle_temperature)
+                thermostat.temperature_courante = nouvelle_temperature
+                thermostat.save()
 
+                # Incrémentation de l'action pour maintenance
+                thermostat.set_en_maintenance()
+                messages.success(request, "Température modifiée et l'objet est désormais en maintenance.")
 
-    return render(request, 'accounts/modifier_temp.html')
+            except ValueError:
+                messages.error(request, "Veuillez entrer une valeur numérique valide.")
+        else:
+            messages.error(request, "La température est requise.")
+        return redirect('afficher_objets', objet_type='thermostat')
+
+    return render(request, 'accounts/modifier_temp.html', {'thermostat': thermostat})
 
 def logout_user(request):
     logout(request)
     return redirect('index')
+
+@login_required
+def signaler_objet(request, objet_type, objet_id):
+    """
+    Permet aux utilisateurs de signaler un objet comme non fonctionnel ou pour une autre raison.
+    """
+    if request.method == 'POST':
+        raison = request.POST.get('raison', '')
+
+        # Créer un signalement pour l'objet signalé
+        signalement = Signalement.objects.create(
+            utilisateur=request.user,
+            objet_type=objet_type,
+            objet_id=objet_id,
+            raison=raison
+        )
+
+        messages.success(request, "L'objet a été signalé. L'administrateur sera informé.")
+        return redirect('afficher_objets', objet_type=objet_type)  # Redirection vers la page d'objets
+
+    return render(request, 'accounts/signaler_objet.html', {'objet_type': objet_type, 'objet_id': objet_id})
+
 
 
 LEVEL_THRESHOLDS = {
@@ -256,23 +282,52 @@ LEVEL_THRESHOLDS = {
     4: 15,
 }
 
+
+def get_objects_for_type(objet_type):
+    if objet_type == 'salle':
+        return Salle.objects.all()
+    elif objet_type == 'thermostat':
+        return Thermostat.objects.all()
+    elif objet_type == 'ordinateur':
+        return Ordinateur.objects.all()
+    elif objet_type == 'imprimante':
+        return Imprimante.objects.all()
+    elif objet_type == 'poubelle':
+        return Poubelle.objects.all()
+    else:
+        return []
+
+
+@login_required
+def annuler_reservation_salle(request, reservation_id):
+    reservation = get_object_or_404(ReservationSalle, id=reservation_id)
+
+    if reservation.user != request.user:
+        messages.error(request, "Vous ne pouvez annuler que vos propres réservations.")
+        return redirect('afficher_objets', objet_type='salle')
+
+
+    salle = reservation.salle
+    reservation.delete()
+
+
+    salle.disponible = True
+    salle.save()
+
+    messages.success(request, "Votre réservation a été annulée avec succès. La salle est maintenant disponible.")
+
+
+    return redirect('afficher_objets', objet_type='salle')
+
+
 @login_required
 def afficher_objets(request, objet_type):
-    """
-    Affiche les objets connectés d'un type spécifique (imprimante, ordinateur, thermostat, etc.)
-    """
-    if objet_type == 'capteurpresence':
-        objets = CapteurPresence.objects.all()
-    elif objet_type == 'thermostat':
-        objets = Thermostat.objects.all()
-    elif objet_type == 'poubelle':
-        objets = Poubelle.objects.all()
-    elif objet_type == 'imprimante':
-        objets = Imprimante.objects.all()
-    elif objet_type == 'ordinateur':
-        objets = Ordinateur.objects.all()
+    # Afficher les objets
+    if objet_type == 'salle':
+        objets = Salle.objects.all()
     else:
-        return redirect('dashbord')  # Redirection si le type d'objet n'est pas valide
+        # Autres objets (imprimantes, thermostats, etc.)
+        objets = get_objects_for_type(objet_type)
 
     context = {
         'objets': objets,
@@ -280,69 +335,165 @@ def afficher_objets(request, objet_type):
     }
     return render(request, 'accounts/afficher_objets.html', context)
 
+@login_required
+def afficher_reservations(request):
+    reservations = ReservationSalle.objects.filter(user=request.user)
+    return render(request, 'accounts/afficher_reservations.html', {'reservations': reservations})
+
+@login_required
+def reserver_salle(request, salle_id):
+    salle = get_object_or_404(Salle, id=salle_id)
+
+    # Vérifier la disponibilité de la salle
+    if not salle.disponible:
+        messages.error(request, "Cette salle n'est pas disponible.")
+        return redirect('afficher_objets', objet_type='salle')
+
+    # Définir une date de début par défaut à maintenant
+    date_debut_default = timezone.now()
+    date_fin_default = date_debut_default + timedelta(hours=1)
+
+    if request.method == 'POST':
+        date_debut = request.POST.get('date_debut', date_debut_default)
+        date_fin = request.POST.get('date_fin', date_fin_default)
+
+        try:
+            date_debut = timezone.datetime.strptime(date_debut, "%Y-%m-%dT%H:%M")
+            date_fin = timezone.datetime.strptime(date_fin, "%Y-%m-%dT%H:%M")
+
+            if date_debut >= date_fin:
+                messages.error(request, "La date de début doit être avant la date de fin.")
+                return redirect('reserver_salle', salle_id=salle.id)
+
+            # Créer la réservation pour la salle
+            reservation = ReservationSalle(
+                user=request.user,
+                salle=salle,
+                date_debut=date_debut,
+                date_fin=date_fin
+            )
+            reservation.save()
+
+            # Mettre à jour la disponibilité de la salle
+            salle.disponible = False  # La salle devient indisponible après la réservation
+            salle.save()
+
+            messages.success(request, "Votre réservation a été confirmée.")
+            return redirect('afficher_objets', objet_type='salle')
+
+        except ValueError:
+            messages.error(request, "Les dates de réservation sont invalides.")
+            return redirect('reserver_salle', salle_id=salle.id)
+
+    return render(request, 'accounts/reserver_salle.html', {'salle': salle, 'date_debut_default': date_debut_default, 'date_fin_default': date_fin_default})
+
+@login_required
+def reserver_PC(request, ordinateur_id):
+    ordinateur = get_object_or_404(Ordinateur, id=ordinateur_id)
+
+    # Vérifier la disponibilité de l'ordinateur
+    if not ordinateur.disponible:
+        messages.error(request, "Cet ordinateur n'est pas disponible.")
+        return redirect('afficher_objets', objet_type='ordinateur')
+
+    # Définir une date de début par défaut à maintenant
+    date_debut_default = timezone.now()
+    date_fin_default = date_debut_default + timedelta(hours=1)
+
+    if request.method == 'POST':
+        date_debut = request.POST.get('date_debut', date_debut_default)
+        date_fin = request.POST.get('date_fin', date_fin_default)
+
+        try:
+            date_debut = timezone.datetime.strptime(date_debut, "%Y-%m-%dT%H:%M")
+            date_fin = timezone.datetime.strptime(date_fin, "%Y-%m-%dT%H:%M")
+
+            if date_debut >= date_fin:
+                messages.error(request, "La date de début doit être avant la date de fin.")
+                return redirect('reserver_PC', ordinateur_id=ordinateur.id)
+
+            # Créer la réservation pour l'ordinateur
+            reservation = ReservationOrdinateur(
+                user=request.user,
+                ordinateur=ordinateur,
+                date_debut=date_debut,
+                date_fin=date_fin
+            )
+            reservation.save()
+
+            # Mettre à jour la disponibilité de l'ordinateur
+            ordinateur.disponible = False  # L'ordinateur devient indisponible après la réservation
+            ordinateur.save()
+
+            messages.success(request, "Votre réservation a été confirmée.")
+            return redirect('afficher_objets', objet_type='ordinateur')
+
+        except ValueError:
+            messages.error(request, "Les dates de réservation sont invalides.")
+            return redirect('reserver_PC', ordinateur_id=ordinateur.id)
+
+    return render(request, 'accounts/reserver_PC.html', {'ordinateur': ordinateur, 'date_debut_default': date_debut_default, 'date_fin_default': date_fin_default})
 
 
 @login_required
-def reserver_objet(request, objet_type, objet_id):
-    """
-    Gérer la réservation d'un objet (imprimante ou ordinateur)
-    """
-    if objet_type == 'imprimante':
-        objet = Imprimante.objects.get(id=objet_id)
-    elif objet_type == 'ordinateur':
-        objet = Ordinateur.objects.get(id=objet_id)
-    else:
-        return redirect('afficher_objets')
+def vider_poubelle(request, poubelle_id):
+    poubelle = get_object_or_404(Poubelle, id=poubelle_id)
+    if request.method == 'POST':
+        # Vider la poubelle
+        poubelle.quantite_present = 0
+        poubelle.save()
 
-    # Vérification si l'objet est réservable
-    if not objet.reservable or objet.maintenance_due:
-        return render(request, 'error.html', {'message': 'Cet objet n\'est pas disponible pour réservation.'})
+        # Incrémentation de l'action pour maintenance
+        poubelle.set_en_maintenance()
+        messages.success(request, "La poubelle a été vidée et l'objet est désormais en maintenance.")
+        return redirect('afficher_objets', objet_type='poubelle')
 
-    # Créer une nouvelle réservation
-    reservation = Reservation.objects.create(user=request.user, objet_type=objet_type, objet_id=objet.id)
+    return render(request, 'accounts/vider_poubelle.html', {'poubelle': poubelle})
 
-    # Incrémenter le compteur de réservations
-    objet.reservation_count += 1
-    if objet.reservation_count >= 4:
-        # Si l'objet atteint 4 réservations, mettre à jour le champ maintenance_due
-        objet.maintenance_due = True
-        objet.reservable = False  # Marquer l'objet comme non réservable
-    objet.save()
-
-    return redirect('afficher_objets')
 
 
 @login_required
-def annuler_reservation(request, reservation_id):
-    """
-    Annuler une réservation existante
-    """
-    reservation = Reservation.objects.get(id=reservation_id)
+def recherche_profils(request):
+    query = request.GET.get('q', '')
+    utilisateurs = []
 
-    if reservation.user != request.user:
-        return redirect(
-            'afficher_objets')  # Si l'utilisateur essaie de modifier une réservation qui n'est pas la sienne
+    if query:
+        utilisateurs = User.objects.filter(
+            Q(username__icontains=query) |
+            Q(nom__icontains=query) |
+            Q(prenom__icontains=query)
+        )
 
-    # Supprimer la réservation
-    reservation.delete()
+    context = {
+        'utilisateurs': utilisateurs,
+        'query': query
+    }
+    return render(request, 'accounts/resultats_recherche.html', context)
 
-    # Récupérer l'objet réservé
-    if reservation.objet_type == 'imprimante':
-        objet = Imprimante.objects.get(id=reservation.objet_id)
-    elif reservation.objet_type == 'ordinateur':
-        objet = Ordinateur.objects.get(id=reservation.objet_id)
+@login_required
+def profil_detail(request, user_id):
+    profil = User.objects.get(id=user_id)
+    is_admin = request.user.is_superuser or request.user == profil
 
-    # Décrémenter le compteur de réservations
-    objet.reservation_count -= 1
-    if objet.reservation_count < 4:
-        # Si le nombre de réservations est inférieur à 4, remettre l'objet en état réservable
-        objet.maintenance_due = False
-        objet.reservable = True
-    objet.save()
-
-    return redirect('afficher_objets')
+    return render(request, 'accounts/profil_detail.html', {
+        'profil': profil,
+        'is_admin': is_admin
+    })
 
 
-def dashboard(request):
-    # Récupérer les objets connectés
-    return render(request, 'accounts/dashboard.html')
+from django.urls import reverse
+
+def filtrer_objets(request):
+    type_objet = request.GET.get("type")
+    etat = request.GET.get("etat")
+
+    if type_objet == "salles":
+        return redirect(reverse('afficher_objets', args=['salle']))
+    elif type_objet == "ordinateurs":
+        return redirect(reverse('afficher_objets', args=['ordinateur']))
+    elif type_objet == "poubelles":
+        return redirect(reverse('afficher_objets', args=['poubelle']))
+    elif type_objet == "temperature":
+        return redirect(reverse('afficher_objets', args=['thermostat']))
+
+    return redirect("/")

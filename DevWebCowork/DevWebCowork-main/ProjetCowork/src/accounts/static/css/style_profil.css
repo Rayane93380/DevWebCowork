@@ -86,3 +86,20 @@ button {
     border-radius: 5px;
     font-size:
 
+
+.home-button {
+    display: inline-block;
+    margin-bottom: 15px;
+    padding: 8px 16px;
+    background-color: #3498db;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: background-color 0.3s;
+}
+
+.home-button:hover {
+    background-color: #2980b9;
+}
+
+

@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from rest_framework.exceptions import ValidationError
+from django.utils import timezone
 
 class User(AbstractUser):
     points = models.IntegerField(default=0)
@@ -25,56 +26,101 @@ class User(AbstractUser):
 
 class Salle(models.Model):
     nom = models.CharField(max_length=100)
-    capacite = models.IntegerField()
-    disponible = models.BooleanField(default=True)
+    capacite_max = models.IntegerField()
+    description = models.TextField(blank=True)
+    disponible = models.BooleanField(default=True)  # Ajoute ce champ pour vérifier si la salle est disponible
 
     def __str__(self):
-        return f"Salle {self.nom}"
+        return self.nom
+
+
+class Signalement(models.Model):
+    SIGNALER_CHOICES = [
+        ('objet_non_fonctionnel', 'Objet non fonctionnel'),
+        ('autre', 'Autre'),
+    ]
+
+    utilisateur = models.ForeignKey(User, on_delete=models.CASCADE)
+    objet_type = models.CharField(max_length=50)
+    objet_id = models.PositiveIntegerField()
+    raison = models.CharField(max_length=255, blank=True, null=True)
+    statut = models.BooleanField(default=False)
+    date_signalement = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Signalement de {self.utilisateur.username} pour l'objet {self.objet_id}"
+
+    @property
+    def objet(self):
+        if self.objet_type == 'imprimante':
+            return Imprimante.objects.get(id=self.objet_id)
+        elif self.objet_type == 'ordinateur':
+            return Ordinateur.objects.get(id=self.objet_id)
+        elif self.objet_type == 'thermostat':
+            return Thermostat.objects.get(id=self.objet_id)
+        elif self.objet_type == 'poubelle':
+            return Poubelle.objects.get(id=self.objet_id)
+        return None
 
 class Thermostat(models.Model):
-    salle = models.OneToOneField(Salle, on_delete=models.CASCADE)
-    id_unique = models.CharField(max_length=50, unique=True)
+    # Champs existants
     nom = models.CharField(max_length=100)
     temperature_courante = models.FloatField(default=21.0)
     temperature_cible = models.FloatField(default=23.0)
-    mode = models.CharField(max_length=50, choices=[('automatique', 'Automatique'), ('manuel', 'Manuel')],
-                            default='automatique')
-    connectivite = models.CharField(max_length=100, default="Wi-Fi, signal fort")
-    etat_batterie = models.IntegerField(default=100)
-    derniere_interaction = models.DateTimeField(auto_now=True)
+
+    # Champs de maintenance
+    en_maintenance = models.BooleanField(default=False)
+    date_maintenance = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"Thermostat {self.nom} - {self.id_unique}"
+        return self.nom
+
+    def set_en_maintenance(self):
+        """Met l'objet en maintenance pour 5 minutes"""
+        self.en_maintenance = True
+        self.date_maintenance = timezone.now()  # Met à jour l'heure de début de la maintenance
+        self.save()
+
+    def is_maintenance_active(self):
+        """Vérifie si l'objet est en maintenance (5 minutes)"""
+        if not self.en_maintenance:
+            return False
+        if timezone.now() > self.date_maintenance + timezone.timedelta(minutes=5):
+            self.en_maintenance = False
+            self.save()
+            return False
+        return True
 
 class Poubelle(models.Model):
-    TYPE_DECHET_CHOICES = [
-        ('plastique', 'Plastique'),
-        ('carton', 'Carton'),
-        ('alimentaire', 'Alimentaire'),
-        ('papier', 'Papier'),
-    ]
-    salle = models.ForeignKey(Salle, on_delete=models.CASCADE)
-    id_unique = models.CharField(max_length=50, unique=True)
-    type_dechet = models.CharField(max_length=50, choices=TYPE_DECHET_CHOICES)
-
-    # Couleur de la poubelle, qui dépend du type de déchet
+    # Champs existants
+    nom = models.CharField(max_length=100, default="Poubelle inconnue")
+    capacite_max = models.IntegerField(default=38)
+    quantite_present = models.IntegerField(default=12)
     couleur = models.CharField(max_length=50)
+    salle = models.ForeignKey(Salle, on_delete=models.CASCADE, related_name="poubelles")
 
-    # Capacité maximale de la poubelle
-    capacite_maximale = models.FloatField()  # Capacité en litres (par exemple)
-
-    # Quantité actuelle dans la poubelle
-    quantite_present = models.FloatField(default=0)  # Quantité en litres
-
-    def save(self, *args, **kwargs):
-        # S'assurer qu'il n'y ait pas plus de 4 poubelles (une de chaque type) par salle
-        if Poubelle.objects.filter(salle=self.salle, type_dechet=self.type_dechet).exists():
-            raise ValueError("Il ne peut y avoir qu'une poubelle de chaque type dans une salle.")
-
-        super().save(*args, **kwargs)
+    # Champs de maintenance
+    en_maintenance = models.BooleanField(default=False)
+    date_maintenance = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"Poubelle {self.id_unique} - {self.type_dechet} ({self.salle.nom})"
+        return self.nom
+
+    def set_en_maintenance(self):
+        """Met l'objet en maintenance pour 5 minutes"""
+        self.en_maintenance = True
+        self.date_maintenance = timezone.now()  # Met à jour l'heure de début de la maintenance
+        self.save()
+
+    def is_maintenance_active(self):
+        """Vérifie si l'objet est en maintenance (5 minutes)"""
+        if not self.en_maintenance:
+            return False
+        if timezone.now() > self.date_maintenance + timezone.timedelta(minutes=5):
+            self.en_maintenance = False
+            self.save()
+            return False
+        return True
 
 class CapteurPresence(models.Model):
     salle = models.OneToOneField(Salle, on_delete=models.CASCADE)  # Un capteur par salle
@@ -98,7 +144,7 @@ class CapteurPresence(models.Model):
             self.save()
         else:
             raise ValidationError(f"Aucune personne dans la salle {self.salle.nom} pour sortir.")
-# models.py
+
 from django.db import models
 from datetime import datetime
 
@@ -132,12 +178,20 @@ class Ordinateur(models.Model):
 # models.py
 from django.conf import settings
 
-class Reservation(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Utilise AUTH_USER_MODEL
-    objet_type = models.CharField(max_length=50, choices=[('imprimante', 'Imprimante'), ('ordinateur', 'Ordinateur')])
-    objet_id = models.IntegerField()  # ID de l'objet réservé (Imprimante ou Ordinateur)
-    date_reservation = models.DateTimeField(default=datetime.now)  # Date de la réservation
+class ReservationSalle(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    salle = models.ForeignKey(Salle, on_delete=models.CASCADE)
+    date_debut = models.DateTimeField()
+    date_fin = models.DateTimeField()
 
     def __str__(self):
-        return f"Réservation de {self.objet_type} par {self.user.username} le {self.date_reservation}"
+        return f"Réservation de {self.user.username} pour la salle {self.salle.nom} de {self.date_debut} à {self.date_fin}"
 
+class ReservationOrdinateur(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ordinateur = models.ForeignKey(Ordinateur, on_delete=models.CASCADE)
+    date_debut = models.DateTimeField()
+    date_fin = models.DateTimeField()
+
+    def __str__(self):
+        return f"Réservation de {self.user.username} pour l'ordinateur {self.ordinateur.nom} de {self.date_debut} à {self.date_fin}"

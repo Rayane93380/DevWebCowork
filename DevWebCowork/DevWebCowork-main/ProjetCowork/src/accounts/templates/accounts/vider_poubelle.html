@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Modifier la température</title>
+    <title>Vider la poubelle</title>
     <style>
         /* Style global de la page */
         body {
@@ -20,46 +20,43 @@
 
         h1 {
             color: #333;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             font-size: 2em;
             font-weight: bold;
         }
 
-        .form-container {
-            background-color: #ffffff;
-            padding: 20px;
+        /* Conteneur de la poubelle - sans image, juste un fond coloré */
+        .trash-can-container {
+            width: 120px;
+            height: 150px;
+            margin: 30px 0;
+            background-color: #ff7043; /* Couleur de la poubelle */
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 300px;
-            text-align: left;
+            position: relative;
         }
 
-        label {
-            font-size: 1.1em;
-            margin-bottom: 10px;
-            display: block;
-            color: #333;
+        /* Ajout d'un effet visuel pour la poubelle (animation de déversement de déchets) */
+        .trash-can-container::after {
+            content: "🗑️";
+            font-size: 50px;
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
-        input[type="number"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-            font-size: 1em;
-            box-sizing: border-box;
+        .btn-container {
+            margin: 20px;
         }
 
         button {
             background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 12px 20px;
+            padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 1.1em;
-            width: 100%;
             transition: background-color 0.3s ease;
         }
 
@@ -80,23 +77,28 @@
         .link-container a:hover {
             text-decoration: underline;
         }
+
     </style>
 </head>
 <body>
 
-    <h1>Modifier la température du thermostat {{ thermostat.nom }}</h1>
+    <!-- Charger la balise static -->
+    {% load static %}
 
-    <div class="form-container">
-        <form method="POST">
-            {% csrf_token %}
-            <label for="temperature">Nouvelle température :</label>
-            <input type="number" id="temperature" name="temperature" min="0" max="50" required>
-            <button type="submit">Modifier</button>
-        </form>
-    </div>
+    <h1>Vider la poubelle {{ poubelle.id }}</h1>
 
+    <!-- Conteneur de la poubelle sans image -->
+    <div class="trash-can-container"></div>
+
+    <!-- Formulaire pour vider la poubelle -->
+    <form method="POST" class="btn-container">
+        {% csrf_token %}
+        <button type="submit">Vider la poubelle</button>
+    </form>
+
+    <!-- Lien pour revenir aux poubelles -->
     <div class="link-container">
-        <a href="{% url 'afficher_objets' 'thermostat' %}">Retour aux thermostats</a>
+        <a href="{% url 'afficher_objets' 'poubelle' %}">Retour aux poubelles</a>
     </div>
 
 </body>

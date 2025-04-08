@@ -10,6 +10,9 @@
     <div class="profile-container">
         <h2>Modifier votre profil</h2>
 
+        <a href="{% url 'visiteur_index2' %}" class="home-button">← Retour à l'accueil</a>
+
+
         <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
 
@@ -30,13 +33,11 @@
                     <option value="Autre" {% if user.genre == "Autre" %}selected{% endif %}>Autre</option>
                 </select>
 
-               <p>
                 <label for="date_naissance">Date de naissance :</label>
                 <input type="date" id="date_naissance" name="date_naissance" value="{{ user.date_de_naissance|date:'Y-m-d' }}" required>
-<              </p>
 
-                <label for="photo">Photo de profil :</label>
-                <input type="file" id="photo" name="photo">
+                <label for="photo_profil">Photo de profil :</label>
+                <input type="file" id="photo_profil" name="photo_profil">
                 {% if user.photo_profil %}
                     <img src="{{ user.photo_profil.url }}" alt="Photo de profil" class="profile-photo">
                 {% endif %}
@@ -57,7 +58,6 @@
 
                 <label for="password">Nouveau mot de passe :</label>
                 <input type="password" id="password" name="password" placeholder="Laissez vide pour ne pas modifier">
-
             </fieldset>
 
             <button type="submit">Enregistrer les modifications</button>

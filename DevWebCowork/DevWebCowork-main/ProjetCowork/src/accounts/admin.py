@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Poubelle, CapteurPresence, Imprimante, Ordinateur, Salle, Thermostat # Import du modèle personnalisé
+from .models import User, Poubelle, CapteurPresence, Imprimante, Ordinateur, Salle, Thermostat, Signalement # Import du modèle personnalisé
 
 class CustomUserAdmin(UserAdmin):
     list_display = ("username", "nom", "prenom", "email", "age", "date_de_naissance", "genre", "niveau", "points","photo_profil")
@@ -31,18 +31,44 @@ class ThermostatInline(admin.StackedInline):
     extra = 1  # Permet d'ajouter un thermostat directement dans la page de la salle
 
 class SalleAdmin(admin.ModelAdmin):
-    list_display = ['nom', 'capacite', 'disponible']
-    search_fields = ['nom']
-    inlines = [ThermostatInline]  # Permet d'ajouter un thermostat à partir de la page de la salle
+    list_display = ('nom', 'capacite_max', 'description', 'disponible')
+
+class SignalementAdmin(admin.ModelAdmin):
+    list_display = ('utilisateur', 'objet_type', 'objet_id', 'statut', 'raison', 'date_signalement')
+
+admin.site.register(Signalement, SignalementAdmin)
 
 class ThermostatAdmin(admin.ModelAdmin):
-    list_display = ['id_unique', 'nom', 'temperature_courante', 'temperature_cible', 'mode', 'connectivite', 'etat_batterie', 'derniere_interaction']
-    search_fields = ['nom', 'id_unique']  # Recherche par le nom du thermostat ou son ID unique
+    list_display = ('nom', 'temperature_courante', 'temperature_cible', 'en_maintenance', 'date_maintenance')
+    list_filter = ('en_maintenance',)
+    actions = ['mettre_en_maintenance', 'retirer_de_maintenance']
+
+    def mettre_en_maintenance(self, request, queryset):
+        for thermostat in queryset:
+            thermostat.set_en_maintenance()
+    mettre_en_maintenance.short_description = "Mettre les thermostats sélectionnés en maintenance"
+
+    def retirer_de_maintenance(self, request, queryset):
+        for thermostat in queryset:
+            thermostat.en_maintenance = False
+            thermostat.save()
+    retirer_de_maintenance.short_description = "Retirer les thermostats sélectionnés de la maintenance"
 
 class PoubelleAdmin(admin.ModelAdmin):
-    list_display = ['id_unique', 'type_dechet', 'couleur', 'capacite_maximale', 'quantite_present', 'salle']
-    search_fields = ['id_unique', 'type_dechet', 'salle__nom']
-    list_filter = ['type_dechet', 'salle']  # Pour filtrer par type de déchet et salle
+    list_display = ('nom', 'capacite_max', 'quantite_present', 'couleur', 'en_maintenance', 'date_maintenance', 'salle')
+    list_filter = ('en_maintenance', 'salle')
+    actions = ['mettre_en_maintenance', 'retirer_de_maintenance']
+
+    def mettre_en_maintenance(self, request, queryset):
+        for poubelle in queryset:
+            poubelle.set_en_maintenance()
+    mettre_en_maintenance.short_description = "Mettre les poubelles sélectionnées en maintenance"
+
+    def retirer_de_maintenance(self, request, queryset):
+        for poubelle in queryset:
+            poubelle.en_maintenance = False
+            poubelle.save()
+    retirer_de_maintenance.short_description = "Retirer les poubelles sélectionnées de la maintenance"
 
 class CapteurPresenceAdmin(admin.ModelAdmin):
     list_display = ['salle', 'compteur']
