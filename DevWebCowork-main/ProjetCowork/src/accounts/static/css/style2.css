@@ -1,0 +1,138 @@
+html, body {
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column; /* Empiler les éléments verticalement */
+    align-items: center; /* Centrer horizontalement */
+    justify-content: flex-start; /* Aligner en haut */
+    text-align: center;
+    background-image: url("CoWork.jpg");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.user-info {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    background: #ddd;
+    padding: 10px 15px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.username {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.logout-btn, .edit-profile-btn {
+    background: #555;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: background 0.3s ease;
+}
+
+.logout-btn:hover, .edit-profile-btn:hover {
+    background: #333;
+}
+
+/* Conteneur pour la recherche et les filtres */
+.search-filters-container {
+    display: flex;
+    flex-direction: column; /* Disposer les éléments verticalement */
+    align-items: center; /* Centrer horizontalement */
+    margin-top: 20px; /* Espacement depuis le haut */
+    width: 100%; /* Occupé toute la largeur */
+}
+
+.search-bar {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.search-bar input[type="text"] {
+    padding: 8px;
+    width: 250px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.search-bar button {
+    padding: 8px 12px;
+    border: none;
+    background-color: #3498db;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.search-bar button:hover {
+    background-color: #2980b9;
+}
+
+.filter-form {
+    display: flex;
+    flex-direction: column; /* Aligner les filtres en colonne */
+    align-items: center;
+    margin: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px; /* Limiter la largeur des filtres */
+}
+
+.filter-form label,
+.filter-form select {
+    margin: 10px 0;
+    display: inline-block;
+}
+
+.filter-form button {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: #2ecc71;
+    color: white;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+}
+
+.filter-form button:hover {
+    background-color: #27ae60;
+}
+
+/* Tableau (widgets) */
+.dashboard {
+    background-color: rgba(0, 0, 0, .35);
+    padding: 20px;
+    border-radius: 10px;
+    color: white;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    width: 80%; /* Réduire la largeur pour que ça soit plus joli */
+    margin-top: 30px; /* Espacement entre les filtres et les widgets */
+}
+
+.widget {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 20px;
+    border-radius: 10px;
+    font-size: 1.2rem;
+}
+
+.widget button {
+    margin-top: 10px;
+    padding: 5px 10px;
+    background: #808080;
+    color: white;
+    border: none;
+    border-radius: 5px;

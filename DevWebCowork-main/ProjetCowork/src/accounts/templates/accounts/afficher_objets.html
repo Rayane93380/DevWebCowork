@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Objets Connectés</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            background-color: #4CAF50;
+            padding: 20px;
+            margin: 0;
+            font-size: 2em;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .objets-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: space-around;
+        }
+
+        .objet {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 30%;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .objet:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .objet h2 {
+            color: #333;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .objet p {
+            font-size: 1em;
+            color: #555;
+            margin: 8px 0;
+        }
+
+        .objet a {
+            display: inline-block;
+            text-decoration: none;
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            margin-top: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .objet a:hover {
+            background-color: #45a049;
+        }
+
+        .link-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .link-container a {
+            color: #4CAF50;
+            text-decoration: none;
+            font-size: 1.1em;
+        }
+
+        .link-container a:hover {
+            text-decoration: underline;
+        }
+
+        .actions {
+            margin-top: 20px;
+        }
+
+        .actions a {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Titre dynamique en fonction du type d'objet -->
+    <h1>
+        {% if objet_type == 'thermostat' %}
+            Thermostats
+        {% elif objet_type == 'salle' %}
+            Salles
+        {% elif objet_type == 'ordinateur' %}
+            Ordinateurs
+        {% elif objet_type == 'imprimante' %}
+            Imprimantes
+        {% elif objet_type == 'poubelle' %}
+            Poubelles
+        {% else %}
+            Objets Connectés
+        {% endif %}
+    </h1>
+
+    <!-- Lien pour voir les réservations de l'utilisateur -->
+    <div class="link-container">
+        <a href="{% url 'afficher_reservations' %}">Voir mes réservations</a>
+    </div>
+
+    <div class="container">
+        <div class="objets-list">
+            {% for objet in objets %}
+                <div class="objet">
+                    <h2>{{ objet.nom }}</h2>
+
+                    <!-- Affichage des caractéristiques de l'objet -->
+                    {% if objet_type == 'imprimante' %}
+                        <p><strong>Connectivité :</strong> {{ objet.connectivite }}</p>
+                        <p><strong>État :</strong> {{ objet.etat }}</p>
+                        <a href="{% url 'reserver_PC' objet.id %}">Réserver cette imprimante</a>
+                    {% elif objet_type == 'ordinateur' %}
+                        <p><strong>Marque :</strong> {{ objet.marque }}</p>
+                        <p><strong>Numéro de série :</strong> {{ objet.numero_serie }}</p>
+                        <p><strong>État :</strong> {{ objet.etat }}</p>
+                        <a href="{% url 'reserver_PC' objet.id %}">Réserver cet ordinateur</a>
+                    {% elif objet_type == 'thermostat' %}
+                        <p><strong>Température actuelle :</strong> {{ objet.temperature_courante }}°C</p>
+                        <p><strong>Température cible :</strong> {{ objet.temperature_cible }}°C</p>
+                        <a href="{% url 'modifier_temp' objet.id %}">Changer la température</a>
+                    {% elif objet_type == 'poubelle' %}
+                        <p><strong>Capacité :</strong> {{ objet.capacite_max }} L</p>
+                        <p><strong>Quantité présente :</strong> {{ objet.quantite_present }} L</p>
+                        <a href="{% url 'vider_poubelle' objet.id %}">Vider cette poubelle</a>
+                    {% elif objet_type == 'salle' %}
+                        <p><strong>Capacité maximale :</strong> {{ objet.capacite_max }}</p>
+                        <p><strong>Disponibilité :</strong> {% if objet.disponible %}Disponible{% else %}Indisponible{% endif %}</p>
+                        <a href="{% url 'reserver_salle' objet.id %}">Réserver cette salle</a>
+                    {% endif %}
+
+                    <!-- Lien pour signaler l'objet (sauf pour les salles) -->
+                    {% if objet_type != 'salle' %}
+                        <div class="actions">
+                            <a href="{% url 'signaler_objet' objet_type objet.id %}">Signaler cet objet</a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="link-container">
+        <a href="{% url 'visiteur_index2' %}">Retour à l'index</a>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes réservations</title>
+    <style>
+        /* Style global de la page */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            height: 100vh;
+            flex-direction: column;
+            text-align: center;
+            padding-top: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            width: 80%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        li {
+            background-color: #ffffff;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: left;
+        }
+
+        li strong {
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        li a {
+            color: #ff7043;
+            text-decoration: none;
+            font-size: 1em;
+            transition: color 0.3s ease;
+        }
+
+        li a:hover {
+            color: #d04f2d;
+        }
+
+        .empty-message {
+            font-size: 1.2em;
+            color: #777;
+        }
+
+        .link-container {
+            margin-top: 30px;
+        }
+
+        .link-container a {
+            color: #4CAF50;
+            text-decoration: none;
+            font-size: 1.2em;
+        }
+
+        .link-container a:hover {
+            text-decoration: underline;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Mes réservations</h1>
+
+    <ul>
+        {% for reservation in reservations %}
+            <li>
+                <strong>{{ reservation.salle.nom }}</strong><br>
+                De : {{ reservation.date_debut }}<br>
+                À : {{ reservation.date_fin }}<br>
+                <a href="{% url 'annuler_reservation_salle' reservation.id %}">Annuler la réservation</a>
+            </li>
+        {% empty %}
+            <p class="empty-message">Vous n'avez pas encore de réservation.</p>
+        {% endfor %}
+    </ul>
+
+    <div class="link-container">
+        <a href="{% url 'afficher_objets' 'salle' %}">Retour à la liste des salles</a>
+    </div>
+
+</body>
+</html>

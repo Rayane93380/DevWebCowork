@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Températures des Salles</title>
+    <link rel="stylesheet" href="{% static 'css/tempStyle.css' %}">
+</head>
+<body>
+    <div class="temperature-salles">
+        <h1>Température des Salles</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Salle</th>
+                    <th>Température (°C)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Salle 101</td>
+                    <td id="temp-salle-101">22°C</td>
+                </tr>
+                <tr>
+                    <td>Salle 102</td>
+                    <td id="temp-salle-102">21°C</td>
+                </tr>
+                <tr>
+                    <td>Salle 103</td>
+                    <td id="temp-salle-103">23°C</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script src="{% static 'css/tempScript.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple visiteur</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .search-bar {
+            text-align: center;
+            margin: 20px;
+        }
+
+        .search-bar input {
+            padding: 8px;
+            width: 250px;
+            font-size: 16px;
+        }
+
+        .search-bar button {
+            padding: 8px 12px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .widget {
+            text-align: center;
+            margin: 15px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 200px;
+        }
+
+        .widget button {
+            padding: 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Barre de recherche -->
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Rechercher un objet (ex: ordinateur, salle, imprimante...)">
+        <button onclick="searchObjet()">Rechercher</button>
+    </div>
+
+    <div class="dashboard">
+        <!-- Widgets existants -->
+        <div class="widget">
+            🌡️ <br>
+            <strong>Température des salles</strong><br>
+            <button onclick="window.location.href='{% url 'afficher_objets' 'thermostat' %}'">Voir détails</button>
+        </div>
+        <div class="widget">
+            🏢 <br>
+            <strong>Liste des salles</strong><br>
+            <button onclick="window.location.href='{% url 'afficher_objets' 'salle' %}'">Voir détails</button>
+        </div>
+        <div class="widget">
+            🗑️ <br>
+            <strong>Consulter les poubelles vides</strong><br>
+            <button onclick="window.location.href='{% url 'afficher_objets' 'poubelle' %}'">Voir détails</button>
+        </div>
+        <div class="widget">
+            💻 <br>
+            <strong>Consulter les ordinateurs disponibles</strong><br>
+            <button onclick="window.location.href='{% url 'afficher_objets' 'ordinateur' %}'">Voir détails</button>
+        </div>
+        <div class="widget">
+            🖨️ <br>
+            <strong>Consulter les imprimantes disponibles</strong><br>
+            <button onclick="window.location.href='{% url 'afficher_objets' 'imprimante' %}'">Voir détails</button>
+        </div>
+    </div>
+
+    <!-- Script de recherche -->
+    <script>
+        // Dictionnaire Django <-> JS pour les URL dynamiques
+        const urlMap = {
+            'salle': "{% url 'afficher_objets' 'salle' %}",
+            'ordinateur': "{% url 'afficher_objets' 'ordinateur' %}",
+            'imprimante': "{% url 'afficher_objets' 'imprimante' %}",
+            'poubelle': "{% url 'afficher_objets' 'poubelle' %}",
+            'thermostat': "{% url 'afficher_objets' 'thermostat' %}"
+        };
+
+        function searchObjet() {
+            const input = document.getElementById('searchInput').value.trim().toLowerCase();
+            if (urlMap[input]) {
+                window.location.href = urlMap[input];
+            } else {
+                alert("Objet inconnu. Essayez : salle, ordinateur, imprimante, poubelle, thermostat");
+            }
+        }
+
+        // Permet aussi de valider avec "Entrée"
+        document.getElementById("searchInput").addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+                searchObjet();
+            }
+        });
+    </script>
+</body>
+</html>
